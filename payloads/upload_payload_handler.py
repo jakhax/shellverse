@@ -8,11 +8,13 @@ class FTPUploadPayloadHandler(AbstractPayloadHandler):
         '''
         try:
             data=data.decode("utf-8")
+            if len(data.split())==5:
+                return "Invalid args: provide {}\n".format(str("server_addr,username,password,file"))
             server_addr,uname,password,file=data[1],data[2],data[3],data[4]
             ftp=FTP(server_addr) 
             ftp.login(uname,password)
             ftp.retrbinary('RETR %s'%file, open('%s'%file, 'wb').write)
             ftp.quit()
-            return 'Uploaded {} successfully'.format(file)
+            return 'Uploaded {} successfully\n'.format(file)
         except Exception as e:
-            return "Command execution unsuccessful: %s\n" %str(e)
+            return "Command execution unsuccessful: {}\n".format(str(e))
