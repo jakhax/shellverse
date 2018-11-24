@@ -92,8 +92,8 @@ class ClientHandler(AbstractClientHandler):
             if data == b'' or len(data)==0: break
             try:
                 valid_commands=[i for i,c in self.payload_register.items()]
-                if len(data.decode("utf-8").split()[0])<1:
-                    self.send_output("Invalid input")
+                if len(data.decode("utf-8").split())<1:
+                    self.send_output("....\n")
                     continue
                 if data.decode("utf-8").split()[0] in valid_commands:
                     payload_class=self.payload_register[data.decode("utf-8").split()[0]]
@@ -103,7 +103,7 @@ class ClientHandler(AbstractClientHandler):
                 self.send_output(output_str)
             except Exception as e:
                 error_logger.logError(sys.exc_info(), e, True)
-                self.send_output("Error occured while trying to process command:{}".format(e))
+                self.send_output("Error occured while trying to process command:{}\n".format(e))
                 continue
 
                 
