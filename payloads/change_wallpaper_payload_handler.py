@@ -7,6 +7,11 @@ from utils.debug_error_handler import ErrorLogHandler
 error_logger= ErrorLogHandler()
 
 class WindowsWallchangePayloadHandler(AbstractPayloadHandler):
+
+    @classmethod
+    def get_platform(cls):
+        return "windows"
+
     def execute_payload(self, data):
         
         try:

