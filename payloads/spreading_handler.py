@@ -3,6 +3,10 @@ from shutil import copy
 
 
 class WindowsSpreadingHandler:
+    @classmethod
+    def get_platform(cls):
+        return "windows"
+
     def spread(self,file)-> bool:
         try:
             cwd=os.getcwd()

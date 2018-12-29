@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
 # C extensions
 *.so
 
@@ -81,10 +82,14 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
+# ide
+.vscode
+
 # Environments
 .env
 .venv
 env/
+virtual/
 venv/
 ENV/
 env.bak/
