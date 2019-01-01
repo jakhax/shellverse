@@ -3,7 +3,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  
 
 #  address to listen on
-SERVER_ADDR="127.0.0.1"
+SERVER_ADDR="0.0.0.0"
 SERVER_PORT=9999 
 
 # FTP server credentials
